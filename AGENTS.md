@@ -8,15 +8,16 @@ Treat the current implementation as the source of truth unless the user explicit
 
 ## Project
 
-Subscription Tracker is a Java 21 Spring Boot REST backend for recording recurring subscriptions, viewing upcoming payments, and calculating monthly and yearly spending without combining currencies. It is a small single-service learning project. The backend MVP is implemented, tested, containerized, and has been deployed to a VPS through Dokploy.
+Subscription Tracker is a Java 21 Spring Boot application for recording recurring subscriptions, viewing upcoming payments, and calculating monthly and yearly spending without combining currencies. It is a small single-service learning project. The backend MVP and a server-rendered web UI are implemented in one artifact and tested; the existing backend deployment runs through Dokploy.
 
-There is no frontend and no handler for `/`; the root URL currently returns Spring Boot's 404 fallback page. The product interface is the JSON API under `/api/v1` plus Actuator health endpoints.
+The responsive Thymeleaf web interface is available at `/` and `/subscriptions`. The JSON API remains under `/api/v1`, with Actuator health endpoints unchanged.
 
 ## Product scope
 
 Implemented scope:
 
 - create, list, retrieve, replace, cancel, and permanently delete subscriptions;
+- responsive dashboard and subscription-management web interface;
 - dashboard totals for active subscriptions;
 - separate monthly and yearly spending totals per currency;
 - active upcoming payments for a configurable 1-365 day window;
@@ -25,7 +26,7 @@ Implemented scope:
 Current out of scope:
 
 - user accounts, authentication, authorization, and JWT/OAuth;
-- web or mobile UI;
+- separate SPA or mobile application;
 - banking/payment-provider integrations and automatic transaction detection;
 - notifications, Telegram integration, AI features, and external schedulers;
 - microservices and distributed infrastructure.
@@ -35,8 +36,9 @@ Current out of scope:
 ### Completed
 
 - The backend MVP and all controller mappings listed below are implemented.
+- The web UI provides dashboard, list, create, edit, cancel, delete, validation, confirmation, and empty/error states.
 - PostgreSQL schema V1, JPA validation, local/prod profiles, Docker image, and Compose stack exist.
-- Unit/service and standalone MockMvc controller tests pass: 9 tests, 0 failures (`mvnw clean verify`, JDK 21, verified 2026-09-17).
+- Unit/service and standalone MockMvc tests cover both REST and rendered web flows (`mvnw clean verify`, JDK 21, verified 2026-09-17).
 - The Spring Boot 4 Flyway integration uses `spring-boot-starter-flyway` plus `flyway-database-postgresql`.
 
 ### In progress
@@ -45,7 +47,7 @@ Nothing is currently marked in progress in the repository.
 
 ### Known issues
 
-- There is no frontend or root endpoint; `/` returning 404 is expected.
+- Full runtime browser verification against persisted data still depends on a correctly configured PostgreSQL environment.
 - There are no repository/database integration tests and no Testcontainers dependency.
 - The Dockerfile packages with `-DskipTests`; tests must be run as a separate required check before a production build.
 - No CI workflow is stored in this repository.
@@ -54,7 +56,7 @@ Nothing is currently marked in progress in the repository.
 
 - Add PostgreSQL integration coverage with Testcontainers if database-level verification is needed.
 - Add CI for JDK 21 Maven verification and Docker image building.
-- Add a UI or a small root/landing response only if the product scope explicitly expands beyond the REST backend.
+- Add browser automation only if ongoing end-to-end UI regression coverage is needed.
 - Extend the API only from a concrete product requirement; the current MVP itself is complete.
 
 ### Deployment
@@ -82,15 +84,15 @@ Lombok and Testcontainers are not used.
 
 ```text
 HTTP request
-  -> Controller / request DTO validation
+  -> REST or Web MVC controller / DTO or form validation
   -> Service / transaction and business rules
   -> Spring Data repository
   -> PostgreSQL
 
 Entity
   -> manual mapper
-  -> response DTO
-  -> JSON response
+  -> response DTO or Thymeleaf view model
+  -> JSON response or server-rendered HTML
 ```
 
 Architectural boundaries:
@@ -112,10 +114,11 @@ com.example.subscriptiontracker
 ├── domain/       JPA entity and domain enums
 ├── repository/   Spring Data JPA persistence interface
 ├── service/      lifecycle and dashboard business logic
-└── exception/    API error record, domain exception, global advice
+├── web/          Thymeleaf MVC controller, form model, formatting, and web error advice
+└── exception/    API error record, domain exception, global REST advice
 ```
 
-There is currently no separate `config` package.
+Templates live in `src/main/resources/templates`, with local CSS and minimal JavaScript in `static`. There is no separate frontend build or `config` package.
 
 ## Domain model
 
@@ -160,6 +163,21 @@ GET    /actuator/health
 ```
 
 POST returns 201, DELETE returns 204, and the other successful application operations return 200. There is no PATCH for arbitrary edits and no API endpoint at `/`.
+
+Web routes:
+
+```text
+GET  /
+GET  /subscriptions
+GET  /subscriptions/new
+POST /subscriptions
+GET  /subscriptions/{id}/edit
+POST /subscriptions/{id}
+POST /subscriptions/{id}/cancel
+POST /subscriptions/{id}/delete
+```
+
+The web routes render Thymeleaf or redirect after mutations; they do not change the JSON API contract.
 
 ## Error handling
 
@@ -216,6 +234,7 @@ Existing tests are fast unit-style tests:
 - `DashboardServiceTest`: active-only, per-currency monthly/yearly calculations;
 - `SubscriptionControllerTest`: valid/invalid POST, get, 404, and cancel using standalone MockMvc;
 - `DashboardControllerTest`: default dashboard response using standalone MockMvc.
+- `WebControllerTest`: rendered dashboard/list/form views and create/edit/cancel/delete flows using standalone MockMvc with Thymeleaf.
 
 There are no Spring context, repository integration, database, Compose, or Testcontainers tests.
 
@@ -407,6 +426,9 @@ src/main/java/com/example/subscriptiontracker/service/DashboardService.java
 src/main/java/com/example/subscriptiontracker/repository/SubscriptionRepository.java
 src/main/java/com/example/subscriptiontracker/domain/Subscription.java
 src/main/java/com/example/subscriptiontracker/exception/GlobalExceptionHandler.java
+src/main/java/com/example/subscriptiontracker/web/WebController.java
+src/main/resources/templates/
+src/main/resources/static/css/app.css
 src/test/java/com/example/subscriptiontracker/
 ```
 

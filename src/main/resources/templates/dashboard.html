@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Dashboard · Subscription Tracker</title>
+    <link rel="stylesheet" th:href="@{/css/app.css}">
+</head>
+<body>
+<header th:replace="~{fragments/layout :: header('dashboard')}"></header>
+<main class="container page-stack">
+    <section class="page-heading heading-actions">
+        <div>
+            <p class="eyebrow">Overview</p>
+            <h1>Your subscription dashboard</h1>
+            <p>Keep your recurring spending under control.</p>
+        </div>
+        <a class="button button-primary desktop-action" th:href="@{/subscriptions/new}"><span aria-hidden="true">+</span> Add subscription</a>
+    </section>
+
+    <section class="summary-grid" aria-label="Spending summary">
+        <article class="summary-card summary-active">
+            <p>Active subscriptions</p>
+            <strong th:text="${dashboard.activeSubscriptions}">0</strong>
+            <span>currently counting toward spending</span>
+        </article>
+        <article class="summary-card">
+            <p>Monthly spending</p>
+            <div class="money-stack" th:if="${!dashboard.monthlyCost.empty}">
+                <strong th:each="entry : ${dashboard.monthlyCost}" th:text="${ui.money(entry.value, entry.key)}">$0.00</strong>
+            </div>
+            <strong class="zero-value" th:if="${dashboard.monthlyCost.empty}">—</strong>
+            <span>normalized monthly cost</span>
+        </article>
+        <article class="summary-card">
+            <p>Yearly spending</p>
+            <div class="money-stack" th:if="${!dashboard.yearlyCost.empty}">
+                <strong th:each="entry : ${dashboard.yearlyCost}" th:text="${ui.money(entry.value, entry.key)}">$0.00</strong>
+            </div>
+            <strong class="zero-value" th:if="${dashboard.yearlyCost.empty}">—</strong>
+            <span>yearly projection</span>
+        </article>
+    </section>
+
+    <section class="panel">
+        <div class="panel-heading">
+            <div>
+                <p class="eyebrow">Next <span th:text="${upcomingDays}">30</span> days</p>
+                <h2>Upcoming payments</h2>
+            </div>
+            <a class="text-link" th:href="@{/subscriptions}">View all subscriptions <span aria-hidden="true">→</span></a>
+        </div>
+        <div class="upcoming-list" th:if="${!dashboard.upcomingPayments.empty}">
+            <article class="upcoming-item" th:each="subscription : ${dashboard.upcomingPayments}">
+                <div class="item-icon" th:text="${#strings.substring(subscription.name, 0, 1).toUpperCase()}" aria-hidden="true">S</div>
+                <div class="item-main">
+                    <h3 th:text="${subscription.name}">Subscription</h3>
+                    <p><span th:text="${ui.label(subscription.billingPeriod)}">Monthly</span> · <span th:text="${ui.label(subscription.category)}">Software</span></p>
+                </div>
+                <div class="item-date"><span>Due</span><strong th:text="${ui.date(subscription.nextPaymentDate)}">Sep 30, 2026</strong></div>
+                <strong class="item-price" th:text="${ui.money(subscription.price, subscription.currency)}">$20.00</strong>
+            </article>
+        </div>
+        <div class="empty-state" th:if="${dashboard.upcomingPayments.empty}">
+            <div class="empty-icon" aria-hidden="true">✓</div>
+            <h3>No upcoming payments in the selected period.</h3>
+            <p>You’re all clear for the next <span th:text="${upcomingDays}">30</span> days.</p>
+        </div>
+    </section>
+
+    <section class="dashboard-footer-action">
+        <div><h2>Manage every subscription</h2><p>Review statuses, update billing details, or clean up old records.</p></div>
+        <a class="button button-secondary" th:href="@{/subscriptions}">Open subscriptions</a>
+    </section>
+</main>
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+</body>
+</html>
+

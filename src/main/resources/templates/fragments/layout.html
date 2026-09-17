@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<body>
+<header class="site-header" th:fragment="header(activePage)">
+    <div class="container header-inner">
+        <a class="brand" th:href="@{/}" aria-label="Subscription Tracker dashboard">
+            <span class="brand-mark" aria-hidden="true">S</span>
+            <span>Subscription Tracker</span>
+        </a>
+        <nav class="main-nav" aria-label="Primary navigation">
+            <a th:href="@{/}" th:classappend="${activePage == 'dashboard'} ? ' active'">Dashboard</a>
+            <a th:href="@{/subscriptions}" th:classappend="${activePage == 'subscriptions'} ? ' active'">Subscriptions</a>
+            <a class="button button-primary nav-add" th:href="@{/subscriptions/new}"><span aria-hidden="true">+</span> Add subscription</a>
+        </nav>
+    </div>
+</header>
+
+<div th:fragment="flash" th:if="${successMessage}" class="alert alert-success" role="status">
+    <span class="alert-icon" aria-hidden="true">✓</span>
+    <span th:text="${successMessage}">Saved successfully.</span>
+</div>
+
+<footer class="site-footer" th:fragment="footer">
+    <div class="container">Subscription Tracker · Your recurring spending, clearly organized.</div>
+</footer>
+</body>
+</html>
+

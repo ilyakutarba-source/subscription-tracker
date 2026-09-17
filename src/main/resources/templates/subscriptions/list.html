@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Subscriptions · Subscription Tracker</title>
+    <link rel="stylesheet" th:href="@{/css/app.css}">
+    <script defer th:src="@{/js/app.js}"></script>
+</head>
+<body>
+<header th:replace="~{fragments/layout :: header('subscriptions')}"></header>
+<main class="container page-stack">
+    <section class="page-heading heading-actions">
+        <div><p class="eyebrow">Library</p><h1>Subscriptions</h1><p>Review billing details and manage each recurring payment.</p></div>
+        <a class="button button-primary desktop-action" th:href="@{/subscriptions/new}"><span aria-hidden="true">+</span> Add subscription</a>
+    </section>
+    <div th:replace="~{fragments/layout :: flash}"></div>
+
+    <section class="panel table-panel" th:if="${!subscriptions.empty}">
+        <div class="table-summary"><strong th:text="${subscriptions.size()}">0</strong> total subscriptions</div>
+        <div class="subscription-table" role="table" aria-label="Subscriptions">
+            <div class="table-row table-header" role="row">
+                <span role="columnheader">Subscription</span><span role="columnheader">Price</span>
+                <span role="columnheader">Billing</span><span role="columnheader">Next payment</span>
+                <span role="columnheader">Status</span><span role="columnheader" class="sr-only">Actions</span>
+            </div>
+            <article class="table-row" role="row" th:each="subscription : ${subscriptions}">
+                <div class="subscription-name" role="cell">
+                    <div class="item-icon" th:text="${#strings.substring(subscription.name, 0, 1).toUpperCase()}" aria-hidden="true">S</div>
+                    <div><strong th:text="${subscription.name}">Name</strong><span th:text="${ui.label(subscription.category)}">Category</span></div>
+                </div>
+                <strong role="cell" data-label="Price" th:text="${ui.money(subscription.price, subscription.currency)}">$20.00</strong>
+                <span role="cell" data-label="Billing" th:text="${ui.label(subscription.billingPeriod)}">Monthly</span>
+                <span role="cell" data-label="Next payment" th:text="${ui.date(subscription.nextPaymentDate)}">Sep 30, 2026</span>
+                <span role="cell" data-label="Status"><span class="badge" th:classappend="' badge-' + ${subscription.status.name().toLowerCase()}" th:text="${subscription.status}">ACTIVE</span></span>
+                <div class="row-actions" role="cell">
+                    <a class="button button-small button-secondary" th:href="@{/subscriptions/{id}/edit(id=${subscription.id})}">Edit</a>
+                    <button th:if="${subscription.status.name() != 'CANCELLED'}" class="button button-small button-quiet" type="button" th:attr="data-dialog-open='cancel-' + ${subscription.id}">Cancel</button>
+                    <button class="button button-small button-danger-quiet" type="button" th:attr="data-dialog-open='delete-' + ${subscription.id}">Delete</button>
+                </div>
+
+                <dialog class="confirm-dialog" th:id="'cancel-' + ${subscription.id}" th:if="${subscription.status.name() != 'CANCELLED'}">
+                    <form method="dialog" class="dialog-close-row"><button class="icon-button" aria-label="Close dialog">×</button></form>
+                    <div class="dialog-symbol dialog-symbol-warning" aria-hidden="true">!</div>
+                    <h2 th:text="'Cancel ' + ${subscription.name} + '?'">Cancel subscription?</h2>
+                    <p>It will remain in your subscription history but will no longer count toward active spending.</p>
+                    <div class="dialog-actions">
+                        <form method="dialog"><button class="button button-secondary">Keep subscription</button></form>
+                        <form method="post" th:action="@{/subscriptions/{id}/cancel(id=${subscription.id})}"><button class="button button-warning" type="submit">Cancel subscription</button></form>
+                    </div>
+                </dialog>
+
+                <dialog class="confirm-dialog" th:id="'delete-' + ${subscription.id}">
+                    <form method="dialog" class="dialog-close-row"><button class="icon-button" aria-label="Close dialog">×</button></form>
+                    <div class="dialog-symbol dialog-symbol-danger" aria-hidden="true">!</div>
+                    <h2 th:text="'Delete ' + ${subscription.name} + '?'">Delete subscription?</h2>
+                    <p>This permanently removes the subscription. This action cannot be undone.</p>
+                    <div class="dialog-actions">
+                        <form method="dialog"><button class="button button-secondary">Keep subscription</button></form>
+                        <form method="post" th:action="@{/subscriptions/{id}/delete(id=${subscription.id})}"><button class="button button-danger" type="submit">Delete permanently</button></form>
+                    </div>
+                </dialog>
+            </article>
+        </div>
+    </section>
+
+    <section class="panel empty-state empty-state-large" th:if="${subscriptions.empty}">
+        <div class="empty-icon" aria-hidden="true">＋</div>
+        <h2>No subscriptions yet.</h2>
+        <p>Add your first subscription to start tracking recurring spending.</p>
+        <a class="button button-primary" th:href="@{/subscriptions/new}">Add subscription</a>
+    </section>
+</main>
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+</body>
+</html>
+

@@ -1,0 +1,96 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title th:text="${editing ? 'Edit subscription' : 'Add subscription'} + ' · Subscription Tracker'">Subscription form</title>
+    <link rel="stylesheet" th:href="@{/css/app.css}">
+</head>
+<body>
+<header th:replace="~{fragments/layout :: header('subscriptions')}"></header>
+<main class="container form-page">
+    <a class="back-link" th:href="@{/subscriptions}"><span aria-hidden="true">←</span> Back to subscriptions</a>
+    <section class="page-heading">
+        <p class="eyebrow" th:text="${editing ? 'Update details' : 'New recurring payment'}">Form</p>
+        <h1 th:text="${editing ? 'Edit subscription' : 'Add subscription'}">Add subscription</h1>
+        <p th:text="${editing ? 'Keep the billing details and status up to date.' : 'Enter the details of your recurring payment.'}">Enter details.</p>
+    </section>
+
+    <form class="subscription-form" method="post" th:object="${subscriptionForm}"
+          th:action="${editing} ? @{/subscriptions/{id}(id=${subscriptionId})} : @{/subscriptions}">
+        <div class="form-section">
+            <div class="section-heading"><span>1</span><div><h2>Basic information</h2><p>How you recognize this subscription.</p></div></div>
+            <div class="field-grid">
+                <div class="field field-wide">
+                    <label for="name">Name</label>
+                    <input id="name" type="text" th:field="*{name}" maxlength="120" placeholder="e.g. Spotify Premium" autocomplete="off" th:classappend="${#fields.hasErrors('name')} ? ' invalid'" th:attr="aria-describedby=${#fields.hasErrors('name')} ? 'name-error'">
+                    <span id="name-error" class="field-error" th:if="${#fields.hasErrors('name')}" th:errors="*{name}" role="alert">Name error</span>
+                </div>
+                <div class="field field-wide">
+                    <label for="description">Description <span class="optional">Optional</span></label>
+                    <textarea id="description" th:field="*{description}" maxlength="1000" rows="3" placeholder="A short note about this subscription" th:classappend="${#fields.hasErrors('description')} ? ' invalid'" th:attr="aria-describedby=${#fields.hasErrors('description')} ? 'description-error'"></textarea>
+                    <span id="description-error" class="field-error" th:if="${#fields.hasErrors('description')}" th:errors="*{description}" role="alert">Description error</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="form-section">
+            <div class="section-heading"><span>2</span><div><h2>Billing details</h2><p>The amount, schedule, and payment dates.</p></div></div>
+            <div class="field-grid">
+                <div class="field">
+                    <label for="price">Price</label>
+                    <input id="price" type="number" th:field="*{price}" min="0.01" step="0.01" inputmode="decimal" placeholder="0.00" th:classappend="${#fields.hasErrors('price')} ? ' invalid'">
+                    <span class="field-error" th:if="${#fields.hasErrors('price')}" th:errors="*{price}" role="alert">Price error</span>
+                </div>
+                <div class="field">
+                    <label for="currency">Currency</label>
+                    <input id="currency" type="text" th:field="*{currency}" maxlength="3" list="currency-options" autocomplete="off" autocapitalize="characters" placeholder="USD" th:classappend="${#fields.hasErrors('currency')} ? ' invalid'">
+                    <datalist id="currency-options"><option value="USD">US Dollar</option><option value="EUR">Euro</option><option value="BYN">Belarusian Ruble</option></datalist>
+                    <span class="field-hint">Any valid 3-letter ISO currency code.</span>
+                    <span class="field-error" th:if="${#fields.hasErrors('currency')}" th:errors="*{currency}" role="alert">Currency error</span>
+                </div>
+                <div class="field">
+                    <label for="billingPeriod">Billing period</label>
+                    <select id="billingPeriod" th:field="*{billingPeriod}" th:classappend="${#fields.hasErrors('billingPeriod')} ? ' invalid'">
+                        <option th:each="period : ${billingPeriods}" th:value="${period}" th:text="${ui.label(period)}">Monthly</option>
+                    </select>
+                    <span class="field-error" th:if="${#fields.hasErrors('billingPeriod')}" th:errors="*{billingPeriod}" role="alert">Billing error</span>
+                </div>
+                <div class="field">
+                    <label for="category">Category</label>
+                    <select id="category" th:field="*{category}" th:classappend="${#fields.hasErrors('category')} ? ' invalid'">
+                        <option th:each="category : ${categories}" th:value="${category}" th:text="${ui.label(category)}">Other</option>
+                    </select>
+                    <span class="field-error" th:if="${#fields.hasErrors('category')}" th:errors="*{category}" role="alert">Category error</span>
+                </div>
+                <div class="field">
+                    <label for="startDate">Start date</label>
+                    <input id="startDate" type="date" th:field="*{startDate}" th:classappend="${#fields.hasErrors('startDate')} ? ' invalid'">
+                    <span class="field-error" th:if="${#fields.hasErrors('startDate')}" th:errors="*{startDate}" role="alert">Start date error</span>
+                </div>
+                <div class="field">
+                    <label for="nextPaymentDate">Next payment date</label>
+                    <input id="nextPaymentDate" type="date" th:field="*{nextPaymentDate}" th:classappend="${#fields.hasErrors('nextPaymentDate')} ? ' invalid'">
+                    <span class="field-error" th:if="${#fields.hasErrors('nextPaymentDate')}" th:errors="*{nextPaymentDate}" role="alert">Next payment error</span>
+                </div>
+                <div class="field field-wide" th:if="${editing}">
+                    <label for="status">Status</label>
+                    <select id="status" th:field="*{status}" th:classappend="${#fields.hasErrors('status')} ? ' invalid'">
+                        <option value="">Choose a status</option>
+                        <option th:each="status : ${statuses}" th:value="${status}" th:text="${ui.label(status)}">Active</option>
+                    </select>
+                    <span class="field-error" th:if="${#fields.hasErrors('status')}" th:errors="*{status}" role="alert">Status error</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="form-actions">
+            <a class="button button-secondary" th:href="@{/subscriptions}">Discard changes</a>
+            <button class="button button-primary" type="submit" th:text="${editing ? 'Save changes' : 'Add subscription'}">Add subscription</button>
+        </div>
+    </form>
+</main>
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+</body>
+</html>
+

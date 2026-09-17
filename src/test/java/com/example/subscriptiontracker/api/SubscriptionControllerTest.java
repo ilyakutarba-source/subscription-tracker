@@ -18,6 +18,7 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.List;
 import java.util.UUID;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -79,6 +80,16 @@ class SubscriptionControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(id.toString()))
                 .andExpect(jsonPath("$.name").value("ChatGPT"));
+    }
+
+    @Test
+    void getAllReturnsSubscriptions() throws Exception {
+        when(service.findAll()).thenReturn(List.of(subscription(SubscriptionStatus.ACTIVE)));
+
+        mockMvc.perform(get("/api/v1/subscriptions"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].name").value("ChatGPT"))
+                .andExpect(jsonPath("$[0].status").value("ACTIVE"));
     }
 
     @Test

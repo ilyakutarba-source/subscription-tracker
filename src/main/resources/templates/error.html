@@ -1,0 +1,20 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Error · Subscription Tracker</title>
+    <link rel="stylesheet" th:href="@{/css/app.css}">
+</head>
+<body>
+<header th:replace="~{fragments/layout :: header('')}"></header>
+<main class="container error-page">
+    <div class="empty-icon error-icon" aria-hidden="true">!</div>
+    <p class="eyebrow">Unable to complete request</p>
+    <h1 th:text="${errorTitle ?: 'Something went wrong'}">Something went wrong</h1>
+    <p th:text="${errorMessage ?: 'We couldn’t load this page. Please try again.'}">Please try again.</p>
+    <div class="error-actions"><a class="button button-primary" th:href="@{/}">Go to dashboard</a><a class="button button-secondary" th:href="@{/subscriptions}">View subscriptions</a></div>
+</main>
+</body>
+</html>
+

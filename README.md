@@ -1,11 +1,11 @@
 # Subscription Tracker
 
-Spring Boot REST backend for recording recurring subscriptions, seeing upcoming charges, and calculating monthly/yearly spending without mixing currencies.
+Spring Boot application for recording recurring subscriptions, seeing upcoming charges, and calculating monthly/yearly spending without mixing currencies. It serves both a web interface and a JSON REST API.
 
 ## Technology stack
 
 - Java 21, Maven Wrapper, Spring Boot 4.1
-- Spring Web, Data JPA, Bean Validation, Actuator
+- Spring MVC, Thymeleaf, Data JPA, Bean Validation, Actuator
 - PostgreSQL 17 and Flyway
 - JUnit, Mockito, MockMvc
 - Multi-stage Docker build and Docker Compose
@@ -15,8 +15,9 @@ The concise product decision record and task breakdown are in [docs/PRODUCT_AND_
 ## Architecture
 
 ```text
-Request -> Controller -> DTO validation -> Service -> Repository -> PostgreSQL
-Response <- response DTO <- Mapper <------------------------------+
+Browser -> Spring MVC / Thymeleaf -> Service -> Repository -> PostgreSQL
+REST client -> REST Controller -> DTO validation ----^
+REST response <- response DTO <- Mapper <-------------+
 ```
 
 Controllers handle HTTP only. Services own lifecycle and calculation rules. Repositories only read/write data. Flyway owns the database schema; `ddl-auto=validate` detects drift without creating or deleting production data.
@@ -62,6 +63,19 @@ Windows:
 ```
 
 Unit/MockMvc tests cover creation, normalization, monthly/yearly conversion, active-only totals, currency separation, valid and invalid POST, missing resources, cancellation and dashboard output.
+
+## Web interface
+
+The application includes a responsive server-rendered interface in the existing Spring Boot artifact:
+
+| Path | Purpose |
+|---|---|
+| `/` | Dashboard with active totals and upcoming payments |
+| `/subscriptions` | List and manage all subscriptions |
+| `/subscriptions/new` | Add a subscription |
+| `/subscriptions/{id}/edit` | Edit a subscription |
+
+Create, edit, cancel, and delete operations reuse the same service layer as the REST API. No separate frontend service or Node build is required.
 
 ## API
 
@@ -198,4 +212,3 @@ No VPS firewall, SSH, Docker daemon, reverse proxy, system port or existing cont
 ## Database lifecycle
 
 Migration `V1__create_subscriptions.sql` creates the `subscriptions` table, checks positive prices and supported enum names, and indexes status/upcoming-payment lookups. Future schema changes must be new versioned Flyway migrations. Production never uses `ddl-auto=create`, destructive migrations, or automatic data removal.
-
