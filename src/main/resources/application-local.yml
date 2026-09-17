@@ -1,0 +1,6 @@
+spring:
+  datasource:
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/subscription_tracker}
+    username: ${DB_USERNAME:subscription_tracker}
+    password: ${DB_PASSWORD:subscription_tracker}
+
