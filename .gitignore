@@ -1,0 +1,15 @@
+target/
+.mvn-cache/
+.tooling/
+.idea/
+*.iml
+*.log
+.env
+.env.*
+!.env.example
+*.key
+*.pem
+*.p12
+*.jks
+.vscode/
+.DS_Store
