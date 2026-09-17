@@ -1,0 +1,40 @@
+services:
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: subscription_tracker
+      POSTGRES_USER: subscription_tracker
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-subscription_tracker}
+    ports:
+      - "5432:5432"
+    volumes:
+      - subscription_tracker_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U subscription_tracker -d subscription_tracker"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  app:
+    build: .
+    profiles: ["full"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      DB_URL: jdbc:postgresql://postgres:5432/subscription_tracker
+      DB_USERNAME: subscription_tracker
+      DB_PASSWORD: ${POSTGRES_PASSWORD:-subscription_tracker}
+    ports:
+      - "8080:8080"
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:8080/actuator/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 20s
+
+volumes:
+  subscription_tracker_data:
+
