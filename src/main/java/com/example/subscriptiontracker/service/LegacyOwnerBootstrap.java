@@ -30,6 +30,12 @@ public class LegacyOwnerBootstrap implements ApplicationRunner {
     @Override
     @Transactional
     public void run(ApplicationArguments args) {
+        User legacyOwner = repository.findById(User.LEGACY_OWNER_ID).orElse(null);
+        if (legacyOwner == null || legacyOwner.isEnabled()) {
+            LOGGER.info("Initial admin bootstrap skipped: legacy owner is already activated or absent");
+            return;
+        }
+
         String initialEmail = environment.getProperty("app.bootstrap.initial-admin-email", "");
         String initialPassword = environment.getProperty("app.bootstrap.initial-admin-password", "");
         String initialDisplayName = environment.getProperty(
@@ -42,12 +48,6 @@ public class LegacyOwnerBootstrap implements ApplicationRunner {
         if (!emailPresent || !passwordPresent || initialPassword.length() < 8 || initialPassword.length() > 72) {
             throw new IllegalStateException(
                     "Initial admin bootstrap requires both email and a password between 8 and 72 characters");
-        }
-
-        User legacyOwner = repository.findById(User.LEGACY_OWNER_ID).orElse(null);
-        if (legacyOwner == null || legacyOwner.isEnabled()) {
-            LOGGER.info("Initial admin bootstrap skipped: legacy owner is already activated or absent");
-            return;
         }
 
         String normalizedEmail = RegistrationService.normalizeEmail(initialEmail);
