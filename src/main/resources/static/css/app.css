@@ -188,7 +188,7 @@ button, a { -webkit-tap-highlight-color: transparent; }
     .admin-user { grid-column: 1 / -1; }
     .admin-row > [data-label]::before { content: attr(data-label); display: block; margin-bottom: 4px; color: var(--muted); font-size: 10px; font-weight: 750; letter-spacing: .05em; text-transform: uppercase; }
     .admin-role-form { align-items: end; }
-    .admin-actions { justify-content: start; }
+    .admin-actions { align-items: flex-start; flex-direction: column; justify-content: start; gap: 4px; }
     .table-header { display: none; }
     .subscription-table { padding: 8px 18px; display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; }
     .table-row { padding: 18px; display: grid; grid-template-columns: 1fr 1fr; align-items: start; gap: 14px; border: 1px solid var(--line); border-radius: 12px; }
