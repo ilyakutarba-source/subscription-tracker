@@ -10,6 +10,8 @@
         <nav class="main-nav" aria-label="Primary navigation">
             <a th:href="@{/}" th:classappend="${activePage == 'dashboard'} ? ' active'">Dashboard</a>
             <a th:href="@{/subscriptions}" th:classappend="${activePage == 'subscriptions'} ? ' active'">Subscriptions</a>
+            <a th:if="${currentAccount != null and currentAccount.admin}"
+               th:href="@{/admin}" th:classappend="${activePage == 'admin'} ? ' active'">Admin</a>
             <a class="button button-primary nav-add" th:href="@{/subscriptions/new}"><span aria-hidden="true">+</span> Add subscription</a>
             <span class="account-name" th:text="${currentAccount != null ? currentAccount.displayName : ''}">Account</span>
             <form class="logout-form" method="post" th:action="@{/logout}">
@@ -22,6 +24,11 @@
 <div th:fragment="flash" th:if="${successMessage}" class="alert alert-success" role="status">
     <span class="alert-icon" aria-hidden="true">✓</span>
     <span th:text="${successMessage}">Saved successfully.</span>
+</div>
+
+<div th:fragment="flashError" th:if="${errorMessage}" class="alert alert-error" role="alert">
+    <span class="alert-icon alert-icon-error" aria-hidden="true">!</span>
+    <span th:text="${errorMessage}">The action could not be completed.</span>
 </div>
 
 <footer class="site-footer" th:fragment="footer">

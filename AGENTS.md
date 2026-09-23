@@ -18,6 +18,7 @@ Implemented scope:
 
 - account registration, BCrypt password hashing, session login, and logout;
 - per-user subscription ownership and IDOR-safe access control;
+- role-protected administration for user roles, account blocking, and service totals;
 - create, list, retrieve, replace, cancel, and permanently delete subscriptions;
 - responsive dashboard and subscription-management web interface;
 - dashboard totals for active subscriptions;
@@ -40,6 +41,7 @@ Current out of scope:
 - The backend MVP and all controller mappings listed below are implemented.
 - The web UI provides dashboard, list, create, edit, cancel, delete, validation, confirmation, and empty/error states.
 - Spring Security form login, signup, logout, database-backed users, and user-scoped REST/Web flows are implemented.
+- The `/admin` web area is restricted to `ADMIN` accounts and provides user roles, blocking controls, per-user subscription counts, and service totals.
 - Existing pre-account subscriptions are assigned by V2 to a disabled legacy owner that can be activated once through bootstrap environment variables.
 - PostgreSQL schema migrations V1-V2, JPA validation, local/prod profiles, Docker image, and Compose stack exist.
 - Unit/service, standalone MockMvc, and Spring Security MVC slice tests cover REST, rendered web, signup/login/CSRF, ownership, and dashboard isolation flows.
@@ -197,11 +199,14 @@ GET  /subscriptions/{id}/edit
 POST /subscriptions/{id}
 POST /subscriptions/{id}/cancel
 POST /subscriptions/{id}/delete
+GET  /admin
+POST /admin/users/{id}/role
+POST /admin/users/{id}/status
 ```
 
 The web routes render Thymeleaf or redirect after mutations; they do not change the JSON API contract.
 
-Public routes are `/login`, `/signup`, `/css/**`, `/js/**`, `/error`, and `/actuator/health`. All other routes require authentication. Unauthenticated web requests redirect to `/login`; unauthenticated `/api/**` requests return the `ApiError` JSON shape with 401. CSRF is enabled. Ownership failures use 404 to avoid IDOR resource disclosure.
+Public routes are `/login`, `/signup`, `/css/**`, `/js/**`, `/error`, and `/actuator/health`. All other routes require authentication, and `/admin/**` additionally requires `ADMIN`. Unauthenticated web requests redirect to `/login`; unauthenticated `/api/**` requests return the `ApiError` JSON shape with 401. CSRF is enabled. Ownership failures use 404 to avoid IDOR resource disclosure.
 
 ## Error handling
 

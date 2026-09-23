@@ -95,6 +95,7 @@ button, a { -webkit-tap-highlight-color: transparent; }
 .alert-success { color: #14532d; border-color: #bbdfc8; background: #effaf2; }
 .alert-error { color: var(--danger); border-color: #f4c7c3; background: var(--danger-soft); }
 .alert-icon { width: 24px; height: 24px; display: grid; place-items: center; border-radius: 50%; color: #fff; background: #23834d; font-weight: 800; }
+.alert-icon-error { background: var(--danger); }
 .table-summary { padding: 15px 20px; color: var(--muted); border-bottom: 1px solid var(--line); font-size: 13px; }
 .table-summary strong { color: var(--ink); }
 .table-row { padding: 16px 20px; display: grid; grid-template-columns: minmax(190px, 1.6fr) minmax(90px, .7fr) minmax(80px, .6fr) minmax(130px, .9fr) minmax(100px, .7fr) minmax(190px, auto); align-items: center; gap: 14px; border-bottom: 1px solid var(--line); }
@@ -144,6 +145,23 @@ button, a { -webkit-tap-highlight-color: transparent; }
 .site-footer { padding: 28px 0; color: var(--muted); border-top: 1px solid var(--line); background: #fff; font-size: 12px; }
 .account-name { max-width: 150px; overflow: hidden; color: var(--muted); font-size: 13px; font-weight: 650; text-overflow: ellipsis; white-space: nowrap; }
 .logout-form { margin: 0; }
+.muted-text { color: var(--muted); font-size: 13px; }
+.admin-summary { grid-template-columns: repeat(4, 1fr); }
+.admin-summary .summary-card { min-height: 160px; }
+.admin-note { margin-top: 7px !important; font-size: 13px !important; }
+.admin-table { overflow-x: auto; }
+.admin-row { min-width: 900px; padding: 16px 20px; display: grid; grid-template-columns: minmax(260px, 1.5fr) 110px 110px minmax(230px, 1fr) 90px; align-items: center; gap: 16px; border-bottom: 1px solid var(--line); }
+.admin-row:last-child { border-bottom: 0; }
+.admin-header { padding-block: 10px; color: var(--muted); background: #fafbfc; font-size: 11px; font-weight: 750; letter-spacing: .06em; text-transform: uppercase; }
+.admin-user { min-width: 0; display: flex; align-items: center; gap: 12px; }
+.admin-user > div { min-width: 0; display: grid; }
+.admin-user strong, .admin-user span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.admin-user span { color: var(--muted); font-size: 12px; }
+.admin-user small { color: var(--primary); font-size: 11px; font-weight: 750; }
+.admin-role-form { display: flex; align-items: center; gap: 8px; }
+.admin-role-form select { min-height: 36px; padding: 6px 30px 6px 9px; border: 1px solid #cbd3dc; border-radius: 9px; background: #fff; }
+.admin-role-form select:disabled, .admin-role-form button:disabled { opacity: .55; cursor: not-allowed; }
+.admin-actions { display: flex; justify-content: end; }
 .auth-body { min-height: 100vh; display: grid; place-items: center; padding: 32px 16px; }
 .auth-shell { width: min(100%, 460px); }
 .auth-brand { width: fit-content; margin: 0 auto 24px; }
@@ -163,6 +181,7 @@ button, a { -webkit-tap-highlight-color: transparent; }
 .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
 
 @media (max-width: 960px) {
+    .admin-summary { grid-template-columns: repeat(2, 1fr); }
     .table-header { display: none; }
     .subscription-table { padding: 8px 18px; display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; }
     .table-row { padding: 18px; display: grid; grid-template-columns: 1fr 1fr; align-items: start; gap: 14px; border: 1px solid var(--line); border-radius: 12px; }
@@ -185,6 +204,7 @@ button, a { -webkit-tap-highlight-color: transparent; }
     .page-stack { padding-block: 36px 48px; gap: 20px; }
     .desktop-action { display: none; }
     .summary-grid { grid-template-columns: 1fr; gap: 12px; }
+    .admin-summary { grid-template-columns: repeat(2, 1fr); }
     .summary-card { min-height: 145px; padding: 20px; }
     .summary-active > strong { font-size: 38px; }
     .panel-heading { padding: 18px; align-items: start; }
@@ -214,4 +234,5 @@ button, a { -webkit-tap-highlight-color: transparent; }
     .item-date { grid-column: 2; }
     .row-actions { grid-template-columns: 1fr; }
     .error-actions { flex-direction: column; }
+    .admin-summary { grid-template-columns: 1fr; }
 }

@@ -42,6 +42,9 @@ public final class AccountPrincipal implements UserDetails, CredentialsContainer
 
     public UUID getUserId() { return userId; }
     public String getDisplayName() { return displayName; }
+    public boolean isAdmin() {
+        return authorities.stream().anyMatch(authority -> "ROLE_ADMIN".equals(authority.getAuthority()));
+    }
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() { return authorities; }

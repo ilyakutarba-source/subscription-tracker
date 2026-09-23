@@ -19,4 +19,6 @@ public interface SubscriptionRepository extends JpaRepository<Subscription, UUID
 
     List<Subscription> findByUserIdAndStatusAndNextPaymentDateBetweenOrderByNextPaymentDateAsc(
             UUID userId, SubscriptionStatus status, LocalDate from, LocalDate to);
+
+    long countByUserId(UUID userId);
 }

@@ -21,6 +21,7 @@ import org.springframework.security.core.context.SecurityContext;
 import java.util.UUID;
 
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -63,6 +64,12 @@ class SecurityConfigTest {
     @Test
     void signupPostRequiresCsrf() throws Exception {
         mockMvc.perform(post("/signup"))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void regularUserCannotOpenAdminArea() throws Exception {
+        mockMvc.perform(get("/admin").with(user("person@example.com").roles("USER")))
                 .andExpect(status().isForbidden());
     }
 

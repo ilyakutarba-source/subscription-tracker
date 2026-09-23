@@ -80,6 +80,14 @@ public class User {
         this.enabled = true;
     }
 
+    public void changeRole(UserRole role) {
+        this.role = role;
+    }
+
+    public void changeEnabled(boolean enabled) {
+        this.enabled = enabled;
+    }
+
     public UUID getId() { return id; }
     public String getEmail() { return email; }
     public String getPasswordHash() { return passwordHash; }

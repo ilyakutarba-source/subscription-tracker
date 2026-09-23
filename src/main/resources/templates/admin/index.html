@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Admin · Subscription Tracker</title>
+    <link rel="stylesheet" th:href="@{/css/app.css}">
+</head>
+<body>
+<header th:replace="~{fragments/layout :: header('admin')}"></header>
+
+<main class="container page-stack">
+    <section class="page-heading heading-actions">
+        <div>
+            <p class="eyebrow">Administration</p>
+            <h1>Users and service activity</h1>
+            <p>Review accounts, roles, access status, and subscription ownership.</p>
+            <p class="admin-note">Role changes are reflected for the user after their next sign-in.</p>
+        </div>
+    </section>
+
+    <div th:replace="~{fragments/layout :: flash}"></div>
+    <div th:replace="~{fragments/layout :: flashError}"></div>
+
+    <section class="summary-grid admin-summary" aria-label="Service summary">
+        <article class="summary-card summary-active">
+            <p>Total users</p>
+            <strong th:text="${overview.totalUsers}">0</strong>
+            <span>registered accounts</span>
+        </article>
+        <article class="summary-card">
+            <p>Enabled users</p>
+            <strong th:text="${overview.enabledUsers}">0</strong>
+            <span>accounts allowed to sign in</span>
+        </article>
+        <article class="summary-card">
+            <p>Administrators</p>
+            <strong th:text="${overview.adminUsers}">0</strong>
+            <span>accounts with admin access</span>
+        </article>
+        <article class="summary-card">
+            <p>Subscriptions</p>
+            <strong th:text="${overview.totalSubscriptions}">0</strong>
+            <span>records across all users</span>
+        </article>
+    </section>
+
+    <section class="panel">
+        <div class="panel-heading">
+            <div>
+                <p class="eyebrow">Accounts</p>
+                <h2>User management</h2>
+            </div>
+            <span class="muted-text" th:text="|${overview.totalUsers} total|">0 total</span>
+        </div>
+
+        <div class="admin-table" th:if="${!users.isEmpty()}">
+            <div class="admin-row admin-header" aria-hidden="true">
+                <span>User</span>
+                <span>Subscriptions</span>
+                <span>Status</span>
+                <span>Role</span>
+                <span>Actions</span>
+            </div>
+
+            <article class="admin-row" th:each="user : ${users}">
+                <div class="admin-user">
+                    <span class="item-icon" th:text="${#strings.substring(user.displayName, 0, 1).toUpperCase()}">U</span>
+                    <div>
+                        <strong th:text="${user.displayName}">User</strong>
+                        <span th:text="${user.email}">user@example.com</span>
+                        <small th:if="${user.currentAccount}">Current account</small>
+                    </div>
+                </div>
+
+                <div data-label="Subscriptions">
+                    <strong th:text="${user.subscriptionCount}">0</strong>
+                </div>
+
+                <div data-label="Status">
+                    <span class="badge" th:classappend="${user.enabled} ? ' badge-active' : ' badge-cancelled'"
+                          th:text="${user.enabled} ? 'ENABLED' : 'BLOCKED'">ENABLED</span>
+                </div>
+
+                <form class="admin-role-form" method="post" th:action="@{/admin/users/{id}/role(id=${user.id})}">
+                    <label class="sr-only" th:for="|role-${user.id}|">Role</label>
+                    <select th:id="|role-${user.id}|" name="role" th:disabled="${user.currentAccount}"
+                            aria-label="User role">
+                        <option th:each="role : ${roles}" th:value="${role}" th:text="${role}"
+                                th:selected="${role == user.role}">USER</option>
+                    </select>
+                    <button class="button button-secondary button-small" type="submit"
+                            th:disabled="${user.currentAccount}">Save</button>
+                </form>
+
+                <div class="admin-actions">
+                    <span th:if="${user.currentAccount}" class="muted-text">Protected</span>
+                    <form th:unless="${user.currentAccount}" method="post"
+                          th:action="@{/admin/users/{id}/status(id=${user.id})}">
+                        <input type="hidden" name="enabled" th:value="${!user.enabled}">
+                        <button th:if="${user.enabled}" class="button button-danger-quiet button-small"
+                                type="submit">Block</button>
+                        <button th:unless="${user.enabled}" class="button button-secondary button-small"
+                                type="submit">Unblock</button>
+                    </form>
+                </div>
+            </article>
+        </div>
+
+        <div class="empty-state" th:if="${users.isEmpty()}">
+            <div class="empty-icon" aria-hidden="true">U</div>
+            <h3>No users yet</h3>
+            <p>Registered accounts will appear here.</p>
+        </div>
+    </section>
+</main>
+
+<footer th:replace="~{fragments/layout :: footer}"></footer>
+</body>
+</html>
