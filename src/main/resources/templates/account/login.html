@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Login · Subscription Tracker</title>
+    <link rel="stylesheet" th:href="@{/css/app.css}">
+</head>
+<body class="auth-body">
+<main class="auth-shell">
+    <a class="brand auth-brand" th:href="@{/login}"><span class="brand-mark">S</span><span>Subscription Tracker</span></a>
+    <section class="auth-card">
+        <p class="eyebrow">Welcome back</p>
+        <h1>Sign in</h1>
+        <p class="auth-intro">Access your subscriptions and spending dashboard.</p>
+        <div class="alert alert-error" th:if="${param.error}" role="alert">Invalid email or password.</div>
+        <div class="alert alert-success" th:if="${param.logout}" role="status">You have been logged out.</div>
+        <div class="alert alert-success" th:if="${param.registered}" role="status">Account created. Sign in to continue.</div>
+        <form class="auth-form" method="post" th:action="@{/login}">
+            <div class="field">
+                <label for="email">Email</label>
+                <input id="email" name="email" type="email" autocomplete="username" required autofocus>
+            </div>
+            <div class="field">
+                <label for="password">Password</label>
+                <input id="password" name="password" type="password" autocomplete="current-password" required>
+            </div>
+            <button class="button button-primary" type="submit">Sign in</button>
+        </form>
+        <p class="auth-switch">No account yet? <a th:href="@{/signup}">Create one</a></p>
+    </section>
+</main>
+</body>
+</html>

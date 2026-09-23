@@ -3,8 +3,11 @@ package com.example.subscriptiontracker.service;
 import com.example.subscriptiontracker.api.dto.SubscriptionRequest;
 import com.example.subscriptiontracker.domain.Subscription;
 import com.example.subscriptiontracker.domain.SubscriptionStatus;
+import com.example.subscriptiontracker.domain.User;
 import com.example.subscriptiontracker.exception.SubscriptionNotFoundException;
 import com.example.subscriptiontracker.repository.SubscriptionRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -18,17 +21,23 @@ import java.util.UUID;
 @Transactional(readOnly = true)
 public class SubscriptionService {
 
-    private final SubscriptionRepository repository;
+    private static final Logger LOGGER = LoggerFactory.getLogger(SubscriptionService.class);
 
-    public SubscriptionService(SubscriptionRepository repository) {
+    private final SubscriptionRepository repository;
+    private final CurrentUserService currentUserService;
+
+    public SubscriptionService(SubscriptionRepository repository, CurrentUserService currentUserService) {
         this.repository = repository;
+        this.currentUserService = currentUserService;
     }
 
     @Transactional
     public Subscription create(SubscriptionRequest request) {
+        User user = currentUserService.requireCurrentUser();
         String currency = normalizeCurrency(request.currency());
         Subscription subscription = new Subscription(
                 UUID.randomUUID(),
+                user,
                 request.name().trim(),
                 normalizeDescription(request.description()),
                 request.price(),
@@ -39,15 +48,22 @@ public class SubscriptionService {
                 request.category(),
                 request.status() == null ? SubscriptionStatus.ACTIVE : request.status()
         );
-        return repository.save(subscription);
+        Subscription saved = repository.save(subscription);
+        LOGGER.info("Subscription created: subscriptionId={}, userId={}", saved.getId(), user.getId());
+        return saved;
     }
 
     public List<Subscription> findAll() {
-        return repository.findAllByOrderByCreatedAtDesc();
+        User user = currentUserService.requireCurrentUser();
+        return repository.findAllByUserIdOrderByCreatedAtDesc(user.getId());
     }
 
     public Subscription findById(UUID id) {
-        return repository.findById(id).orElseThrow(() -> new SubscriptionNotFoundException(id));
+        User user = currentUserService.requireCurrentUser();
+        return repository.findByIdAndUserId(id, user.getId()).orElseThrow(() -> {
+            LOGGER.warn("Subscription access rejected: subscriptionId={}, userId={}", id, user.getId());
+            return new SubscriptionNotFoundException(id);
+        });
     }
 
     @Transactional
@@ -64,6 +80,7 @@ public class SubscriptionService {
                 request.category(),
                 request.status() == null ? subscription.getStatus() : request.status()
         );
+        LOGGER.info("Subscription updated: subscriptionId={}, userId={}", id, subscription.getUser().getId());
         return subscription;
     }
 
@@ -71,6 +88,7 @@ public class SubscriptionService {
     public Subscription cancel(UUID id) {
         Subscription subscription = findById(id);
         subscription.cancel();
+        LOGGER.info("Subscription cancelled: subscriptionId={}, userId={}", id, subscription.getUser().getId());
         return subscription;
     }
 
@@ -78,12 +96,14 @@ public class SubscriptionService {
     public void delete(UUID id) {
         Subscription subscription = findById(id);
         repository.delete(subscription);
+        LOGGER.info("Subscription deleted: subscriptionId={}, userId={}", id, subscription.getUser().getId());
     }
 
     public List<Subscription> findUpcomingPayments(int days) {
+        User user = currentUserService.requireCurrentUser();
         LocalDate today = LocalDate.now();
-        return repository.findByStatusAndNextPaymentDateBetweenOrderByNextPaymentDateAsc(
-                SubscriptionStatus.ACTIVE, today, today.plusDays(days));
+        return repository.findByUserIdAndStatusAndNextPaymentDateBetweenOrderByNextPaymentDateAsc(
+                user.getId(), SubscriptionStatus.ACTIVE, today, today.plusDays(days));
     }
 
     private String normalizeCurrency(String value) {
@@ -96,4 +116,3 @@ public class SubscriptionService {
         return value == null || value.isBlank() ? null : value.trim();
     }
 }
-

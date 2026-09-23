@@ -5,6 +5,7 @@ import com.example.subscriptiontracker.api.dto.DashboardResponse;
 import com.example.subscriptiontracker.domain.BillingPeriod;
 import com.example.subscriptiontracker.domain.Subscription;
 import com.example.subscriptiontracker.domain.SubscriptionStatus;
+import com.example.subscriptiontracker.domain.User;
 import com.example.subscriptiontracker.repository.SubscriptionRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -24,14 +25,18 @@ public class DashboardService {
 
     private final SubscriptionRepository repository;
     private final SubscriptionMapper mapper;
+    private final CurrentUserService currentUserService;
 
-    public DashboardService(SubscriptionRepository repository, SubscriptionMapper mapper) {
+    public DashboardService(SubscriptionRepository repository, SubscriptionMapper mapper,
+                            CurrentUserService currentUserService) {
         this.repository = repository;
         this.mapper = mapper;
+        this.currentUserService = currentUserService;
     }
 
     public DashboardResponse getDashboard(int days) {
-        List<Subscription> active = repository.findByStatus(SubscriptionStatus.ACTIVE);
+        User user = currentUserService.requireCurrentUser();
+        List<Subscription> active = repository.findByUserIdAndStatus(user.getId(), SubscriptionStatus.ACTIVE);
         Map<String, BigDecimal> monthly = new LinkedHashMap<>();
         Map<String, BigDecimal> yearly = new LinkedHashMap<>();
 
@@ -43,8 +48,8 @@ public class DashboardService {
         yearly.replaceAll((currency, amount) -> amount.setScale(2, RoundingMode.HALF_UP));
 
         LocalDate today = LocalDate.now();
-        var upcoming = repository.findByStatusAndNextPaymentDateBetweenOrderByNextPaymentDateAsc(
-                        SubscriptionStatus.ACTIVE, today, today.plusDays(days))
+        var upcoming = repository.findByUserIdAndStatusAndNextPaymentDateBetweenOrderByNextPaymentDateAsc(
+                        user.getId(), SubscriptionStatus.ACTIVE, today, today.plusDays(days))
                 .stream()
                 .map(mapper::toResponse)
                 .toList();
@@ -64,4 +69,3 @@ public class DashboardService {
                 : subscription.getPrice();
     }
 }
-

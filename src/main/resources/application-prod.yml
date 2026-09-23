@@ -4,3 +4,16 @@ spring:
     username: ${DB_USERNAME}
     password: ${DB_PASSWORD}
 
+server:
+  servlet:
+    session:
+      cookie:
+        http-only: true
+        same-site: lax
+        secure: ${SESSION_COOKIE_SECURE:false}
+
+logging:
+  level:
+    com.example.subscriptiontracker: INFO
+    org.springframework.security: WARN
+    org.hibernate.SQL: WARN

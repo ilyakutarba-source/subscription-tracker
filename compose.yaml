@@ -26,6 +26,10 @@ services:
       DB_URL: jdbc:postgresql://postgres:5432/subscription_tracker
       DB_USERNAME: subscription_tracker
       DB_PASSWORD: ${POSTGRES_PASSWORD:-subscription_tracker}
+      INITIAL_ADMIN_EMAIL: ${INITIAL_ADMIN_EMAIL:-}
+      INITIAL_ADMIN_PASSWORD: ${INITIAL_ADMIN_PASSWORD:-}
+      INITIAL_ADMIN_DISPLAY_NAME: ${INITIAL_ADMIN_DISPLAY_NAME:-Legacy owner}
+      SESSION_COOKIE_SECURE: ${SESSION_COOKIE_SECURE:-false}
     ports:
       - "8080:8080"
     healthcheck:
@@ -37,4 +41,3 @@ services:
 
 volumes:
   subscription_tracker_data:
-

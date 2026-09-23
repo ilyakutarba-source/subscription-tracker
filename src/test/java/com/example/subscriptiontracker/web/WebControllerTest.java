@@ -6,6 +6,8 @@ import com.example.subscriptiontracker.domain.BillingPeriod;
 import com.example.subscriptiontracker.domain.Subscription;
 import com.example.subscriptiontracker.domain.SubscriptionCategory;
 import com.example.subscriptiontracker.domain.SubscriptionStatus;
+import com.example.subscriptiontracker.domain.User;
+import com.example.subscriptiontracker.domain.UserRole;
 import com.example.subscriptiontracker.exception.SubscriptionNotFoundException;
 import com.example.subscriptiontracker.service.DashboardService;
 import com.example.subscriptiontracker.service.SubscriptionService;
@@ -186,7 +188,8 @@ class WebControllerTest {
     }
 
     private Subscription subscription(UUID id) {
-        return new Subscription(id, "ChatGPT", "AI assistant", new BigDecimal("20.00"), "USD",
+        User user = new User(UUID.randomUUID(), "user@example.com", "hash", "User", UserRole.USER, true);
+        return new Subscription(id, user, "ChatGPT", "AI assistant", new BigDecimal("20.00"), "USD",
                 BillingPeriod.MONTHLY, LocalDate.of(2026, 1, 1), LocalDate.of(2026, 2, 1),
                 SubscriptionCategory.SOFTWARE, SubscriptionStatus.ACTIVE);
     }

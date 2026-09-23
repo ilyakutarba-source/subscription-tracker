@@ -8,6 +8,12 @@ spring:
   flyway:
     enabled: true
 
+app:
+  bootstrap:
+    initial-admin-email: ${INITIAL_ADMIN_EMAIL:}
+    initial-admin-password: ${INITIAL_ADMIN_PASSWORD:}
+    initial-admin-display-name: ${INITIAL_ADMIN_DISPLAY_NAME:Legacy owner}
+
 server:
   port: ${SERVER_PORT:8080}
 
@@ -19,4 +25,3 @@ management:
   endpoint:
     health:
       show-details: never
-

@@ -16,6 +16,8 @@ The responsive Thymeleaf web interface is available at `/` and `/subscriptions`.
 
 Implemented scope:
 
+- account registration, BCrypt password hashing, session login, and logout;
+- per-user subscription ownership and IDOR-safe access control;
 - create, list, retrieve, replace, cancel, and permanently delete subscriptions;
 - responsive dashboard and subscription-management web interface;
 - dashboard totals for active subscriptions;
@@ -25,7 +27,7 @@ Implemented scope:
 
 Current out of scope:
 
-- user accounts, authentication, authorization, and JWT/OAuth;
+- password reset, email verification, 2FA, OAuth, and JWT;
 - separate SPA or mobile application;
 - banking/payment-provider integrations and automatic transaction detection;
 - notifications, Telegram integration, AI features, and external schedulers;
@@ -37,8 +39,10 @@ Current out of scope:
 
 - The backend MVP and all controller mappings listed below are implemented.
 - The web UI provides dashboard, list, create, edit, cancel, delete, validation, confirmation, and empty/error states.
-- PostgreSQL schema V1, JPA validation, local/prod profiles, Docker image, and Compose stack exist.
-- Unit/service and standalone MockMvc tests cover both REST and rendered web flows (`mvnw clean verify`, JDK 21, verified 2026-09-17).
+- Spring Security form login, signup, logout, database-backed users, and user-scoped REST/Web flows are implemented.
+- Existing pre-account subscriptions are assigned by V2 to a disabled legacy owner that can be activated once through bootstrap environment variables.
+- PostgreSQL schema migrations V1-V2, JPA validation, local/prod profiles, Docker image, and Compose stack exist.
+- Unit/service, standalone MockMvc, and Spring Security MVC slice tests cover REST, rendered web, signup/login/CSRF, ownership, and dashboard isolation flows.
 - The Spring Boot 4 Flyway integration uses `spring-boot-starter-flyway` plus `flyway-database-postgresql`.
 
 ### In progress
@@ -73,7 +77,7 @@ Nothing is currently marked in progress in the repository.
 - Java 21
 - Spring Boot 4.1.1
 - Maven 3.9.11 via Maven Wrapper 3.3.4
-- Spring Web, Spring Data JPA, Bean Validation, Spring Boot Actuator
+- Spring Web, Spring Security, Thymeleaf, Spring Data JPA, Bean Validation, Spring Boot Actuator
 - PostgreSQL 17 and Flyway 12.x through the Spring Boot Flyway starter
 - JUnit 5, Mockito, AssertJ, and standalone MockMvc
 - Docker multi-stage builds and Docker Compose
@@ -84,8 +88,9 @@ Lombok and Testcontainers are not used.
 
 ```text
 HTTP request
+  -> Spring Security / authenticated HTTP session
   -> REST or Web MVC controller / DTO or form validation
-  -> Service / transaction and business rules
+  -> Service / current user / ownership and business rules
   -> Spring Data repository
   -> PostgreSQL
 
@@ -98,8 +103,8 @@ Entity
 Architectural boundaries:
 
 - Controllers handle HTTP mapping, status codes, parameter validation, and DTO conversion only.
-- Services own lifecycle rules, normalization, calculations, and transaction boundaries.
-- Repositories own persistence queries only.
+- Services own current-user resolution, ownership enforcement, lifecycle rules, normalization, calculations, and transaction boundaries.
+- Repositories own persistence queries; user-facing subscription queries must include the current user's id.
 - JPA entities are not exposed directly through REST; records in `api.dto` define API contracts.
 - `SubscriptionMapper` performs explicit entity-to-response conversion.
 - Flyway owns schema evolution; Hibernate uses `ddl-auto=validate` and must not create production schema.
@@ -113,6 +118,7 @@ com.example.subscriptiontracker
 │   └── dto/      request/response record contracts
 ├── domain/       JPA entity and domain enums
 ├── repository/   Spring Data JPA persistence interface
+├── security/     Spring Security configuration, principal, database user lookup, auth events, and REST handlers
 ├── service/      lifecycle and dashboard business logic
 ├── web/          Thymeleaf MVC controller, form model, formatting, and web error advice
 └── exception/    API error record, domain exception, global REST advice
@@ -122,9 +128,18 @@ Templates live in `src/main/resources/templates`, with local CSS and minimal Jav
 
 ## Domain model
 
-`Subscription` is the sole JPA entity and maps to `subscriptions`.
+`User` maps to `users` and owns subscriptions.
+
+- Identity: application-generated UUID; the fixed disabled legacy-owner UUID is reserved for V2 backfill.
+- Login identifier: normalized lowercase unique email.
+- Credentials: BCrypt `passwordHash`; raw passwords are never persisted or logged.
+- Profile/security fields: display name, `USER`/`ADMIN` string role, enabled flag, and audit timestamps.
+- Authentication uses a database-backed `UserDetailsService`, an `AccountPrincipal`, form login, and an in-memory HTTP session.
+
+`Subscription` maps to `subscriptions`.
 
 - Identity: application-generated UUID.
+- Ownership: required lazy `ManyToOne` from `Subscription` to `User`; public requests never accept a user id.
 - Descriptive fields: name (maximum 120 characters) and optional description (maximum 1000).
 - Money: positive `BigDecimal` with database precision 19 and scale 2; ISO currency is stored separately as an uppercase three-letter string.
 - Billing: `MONTHLY` or `YEARLY`; start and next-payment dates use `LocalDate`.
@@ -141,6 +156,8 @@ Templates live in `src/main/resources/templates`, with local CSS and minimal Jav
 - Create defaults a missing status to `ACTIVE`.
 - Update replaces all editable fields, but a missing status preserves the entity's current status.
 - Cancel always sets status to `CANCELLED`; delete is a physical deletion.
+- Every create assigns the current authenticated user on the server.
+- Every list/get/update/cancel/delete/dashboard/upcoming query is restricted by current user id; a foreign UUID is returned as 404.
 - Subscription lists are ordered by `createdAt` descending.
 - Dashboard totals include only `ACTIVE` subscriptions.
 - Yearly prices are divided by 12 for monthly totals; monthly prices are multiplied by 12 for yearly totals.
@@ -167,6 +184,11 @@ POST returns 201, DELETE returns 204, and the other successful application opera
 Web routes:
 
 ```text
+GET  /login
+POST /login                 # handled by Spring Security
+GET  /signup
+POST /signup
+POST /logout                # handled by Spring Security
 GET  /
 GET  /subscriptions
 GET  /subscriptions/new
@@ -178,6 +200,8 @@ POST /subscriptions/{id}/delete
 ```
 
 The web routes render Thymeleaf or redirect after mutations; they do not change the JSON API contract.
+
+Public routes are `/login`, `/signup`, `/css/**`, `/js/**`, `/error`, and `/actuator/health`. All other routes require authentication. Unauthenticated web requests redirect to `/login`; unauthenticated `/api/**` requests return the `ApiError` JSON shape with 401. CSRF is enabled. Ownership failures use 404 to avoid IDOR resource disclosure.
 
 ## Error handling
 
@@ -192,11 +216,20 @@ timestamp, status, error, message, path, fieldErrors
 - invalid ISO currency, controller parameter constraint violations, and unreadable JSON become 400;
 - no custom catch-all 500 mapping currently exists.
 
+## Logging
+
+- Standard SLF4J/Logback is used; no additional logging framework or observability infrastructure is installed.
+- Successful signup/login/logout and subscription create/update/cancel/delete operations log stable user/subscription UUID context.
+- Duplicate signup, failed authentication, and rejected subscription access log at WARN without email, credentials, request bodies, session ids, cookies, CSRF tokens, or environment secrets.
+- `AccountPrincipal.toString()` omits credentials and implements `CredentialsContainer` so Spring erases its password hash after authentication.
+- Production keeps application logs at INFO and Spring Security/Hibernate SQL at WARN; do not enable verbose security or SQL logging by default.
+
 ## Database
 
 - Database: PostgreSQL.
 - Migration directory: `src/main/resources/db/migration/`.
 - V1 creates `subscriptions`, enum-name checks, a positive-price check, the ISO-style uppercase currency check, and indexes on `status` and `(status, next_payment_date)`.
+- V2 creates `users`, inserts a disabled non-login legacy owner, backfills existing subscriptions, makes `user_id` non-null with a foreign key, and adds ownership-aware indexes.
 - JPA uses the default physical naming behavior plus explicit column names where needed.
 
 Existing Flyway migrations may already have been applied in production.
@@ -222,9 +255,15 @@ DB_USERNAME
 DB_PASSWORD
 SERVER_PORT            # optional; defaults to 8080
 POSTGRES_PASSWORD      # Compose PostgreSQL/local full-stack input
+INITIAL_ADMIN_EMAIL    # optional one-time legacy-owner activation
+INITIAL_ADMIN_PASSWORD # optional one-time legacy-owner activation; secret
+INITIAL_ADMIN_DISPLAY_NAME # optional bootstrap display name
+SESSION_COOKIE_SECURE  # optional; enable when production is HTTPS
 ```
 
 Never place actual production values or secrets in source, logs, tests, documentation, or `AGENTS.md`.
+
+The initial-admin variables must be supplied together and are only used while the disabled legacy owner exists. Activation replaces its unusable credential with a BCrypt hash and preserves ownership of production rows. It does not reset an already activated account. Remove the bootstrap secrets after successful activation. Sessions are stored in application memory; the current deployment assumes a single app instance.
 
 ## Testing
 
@@ -235,8 +274,11 @@ Existing tests are fast unit-style tests:
 - `SubscriptionControllerTest`: valid/invalid POST, get, 404, and cancel using standalone MockMvc;
 - `DashboardControllerTest`: default dashboard response using standalone MockMvc.
 - `WebControllerTest`: rendered dashboard/list/form views and create/edit/cancel/delete flows using standalone MockMvc with Thymeleaf.
+- `RegistrationServiceTest` and `AccountControllerTest`: normalization, BCrypt hashing, duplicates, signup validation, and password confirmation.
+- `SecurityConfigTest`: web redirect, API 401, CSRF, successful login, wrong password, and unknown email.
+- Service tests verify user-scoped list/read/write behavior and two-user dashboard isolation.
 
-There are no Spring context, repository integration, database, Compose, or Testcontainers tests.
+There are no repository integration, database, Compose, or Testcontainers tests. `SecurityConfigTest` is a focused Spring MVC/security application-context slice; the rest remain unit or standalone MockMvc tests.
 
 Use the wrapper and JDK 21:
 
@@ -319,6 +361,8 @@ Developer
 `/actuator/health` is the intended platform/runtime health endpoint. The application startup order is: connect to PostgreSQL, run/validate Flyway migrations, validate JPA mappings, then accept traffic.
 
 Some production runtime configuration lives in Dokploy and is intentionally not stored in the repository. Verify those values directly in Dokploy when a task depends on them. Never record production passwords, webhook tokens, credentials, container IDs, or other secrets here.
+
+The first deployment containing V2 requires a deliberate decision about legacy rows. To make them accessible, configure the one-time initial-admin variables in Dokploy before deployment, verify login and ownership, then remove the password variable. Port 8080, `/actuator/health`, the datasource contract, and the root Dockerfile remain unchanged.
 
 ## Deployment safety
 
@@ -425,8 +469,14 @@ src/main/java/com/example/subscriptiontracker/service/SubscriptionService.java
 src/main/java/com/example/subscriptiontracker/service/DashboardService.java
 src/main/java/com/example/subscriptiontracker/repository/SubscriptionRepository.java
 src/main/java/com/example/subscriptiontracker/domain/Subscription.java
+src/main/java/com/example/subscriptiontracker/domain/User.java
 src/main/java/com/example/subscriptiontracker/exception/GlobalExceptionHandler.java
+src/main/java/com/example/subscriptiontracker/security/SecurityConfig.java
+src/main/java/com/example/subscriptiontracker/security/DatabaseUserDetailsService.java
+src/main/java/com/example/subscriptiontracker/service/CurrentUserService.java
+src/main/java/com/example/subscriptiontracker/service/RegistrationService.java
 src/main/java/com/example/subscriptiontracker/web/WebController.java
+src/main/java/com/example/subscriptiontracker/web/AccountController.java
 src/main/resources/templates/
 src/main/resources/static/css/app.css
 src/test/java/com/example/subscriptiontracker/

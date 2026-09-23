@@ -4,6 +4,8 @@ import com.example.subscriptiontracker.domain.BillingPeriod;
 import com.example.subscriptiontracker.domain.Subscription;
 import com.example.subscriptiontracker.domain.SubscriptionCategory;
 import com.example.subscriptiontracker.domain.SubscriptionStatus;
+import com.example.subscriptiontracker.domain.User;
+import com.example.subscriptiontracker.domain.UserRole;
 import com.example.subscriptiontracker.exception.GlobalExceptionHandler;
 import com.example.subscriptiontracker.exception.SubscriptionNotFoundException;
 import com.example.subscriptiontracker.service.SubscriptionService;
@@ -71,7 +73,7 @@ class SubscriptionControllerTest {
     @Test
     void getExistingReturnsSubscription() throws Exception {
         UUID id = UUID.randomUUID();
-        Subscription existing = new Subscription(id, "ChatGPT", "AI", new BigDecimal("20.00"), "USD",
+        Subscription existing = new Subscription(id, user(), "ChatGPT", "AI", new BigDecimal("20.00"), "USD",
                 BillingPeriod.MONTHLY, LocalDate.of(2026, 1, 1), LocalDate.of(2026, 2, 1),
                 SubscriptionCategory.SOFTWARE, SubscriptionStatus.ACTIVE);
         when(service.findById(id)).thenReturn(existing);
@@ -113,9 +115,13 @@ class SubscriptionControllerTest {
     }
 
     private Subscription subscription(SubscriptionStatus status) {
-        return new Subscription(UUID.randomUUID(), "ChatGPT", "AI", new BigDecimal("20.00"), "USD",
+        return new Subscription(UUID.randomUUID(), user(), "ChatGPT", "AI", new BigDecimal("20.00"), "USD",
                 BillingPeriod.MONTHLY, LocalDate.of(2026, 1, 1), LocalDate.of(2026, 2, 1),
                 SubscriptionCategory.SOFTWARE, status);
+    }
+
+    private User user() {
+        return new User(UUID.randomUUID(), "user@example.com", "hash", "User", UserRole.USER, true);
     }
 
     private String validJson() {

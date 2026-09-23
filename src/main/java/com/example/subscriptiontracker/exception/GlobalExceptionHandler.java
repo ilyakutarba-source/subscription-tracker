@@ -22,6 +22,12 @@ public class GlobalExceptionHandler {
         return error(HttpStatus.NOT_FOUND, "Not found", exception.getMessage(), request, Map.of());
     }
 
+    @ExceptionHandler(CurrentUserNotFoundException.class)
+    ResponseEntity<ApiError> handleCurrentUserMissing(CurrentUserNotFoundException exception,
+                                                       HttpServletRequest request) {
+        return error(HttpStatus.UNAUTHORIZED, "Unauthorized", exception.getMessage(), request, Map.of());
+    }
+
     @ExceptionHandler(MethodArgumentNotValidException.class)
     ResponseEntity<ApiError> handleValidation(MethodArgumentNotValidException exception,
                                               HttpServletRequest request) {
@@ -44,4 +50,3 @@ public class GlobalExceptionHandler {
                 Instant.now(), status.value(), error, message, request.getRequestURI(), fields));
     }
 }
-

@@ -1,6 +1,7 @@
 package com.example.subscriptiontracker.web;
 
 import com.example.subscriptiontracker.exception.SubscriptionNotFoundException;
+import com.example.subscriptiontracker.exception.CurrentUserNotFoundException;
 import jakarta.servlet.http.HttpServletResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,6 +21,12 @@ public class WebExceptionHandler {
     ModelAndView notFound(HttpServletResponse response) {
         response.setStatus(HttpServletResponse.SC_NOT_FOUND);
         return error("Subscription not found", "The subscription may have been removed or the link is no longer valid.");
+    }
+
+    @ExceptionHandler(CurrentUserNotFoundException.class)
+    ModelAndView currentUserMissing(HttpServletResponse response) {
+        response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+        return error("Please sign in again", "Your account session is no longer valid.");
     }
 
     @ExceptionHandler(Exception.class)

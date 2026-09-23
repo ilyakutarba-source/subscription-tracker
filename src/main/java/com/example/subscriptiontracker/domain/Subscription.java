@@ -5,6 +5,9 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.Id;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
@@ -20,6 +23,10 @@ public class Subscription {
 
     @Id
     private UUID id;
+
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "user_id", nullable = false)
+    private User user;
 
     @Column(nullable = false, length = 120)
     private String name;
@@ -60,10 +67,11 @@ public class Subscription {
     protected Subscription() {
     }
 
-    public Subscription(UUID id, String name, String description, BigDecimal price, String currency,
+    public Subscription(UUID id, User user, String name, String description, BigDecimal price, String currency,
                         BillingPeriod billingPeriod, LocalDate startDate, LocalDate nextPaymentDate,
                         SubscriptionCategory category, SubscriptionStatus status) {
         this.id = id;
+        this.user = user;
         this.name = name;
         this.description = description;
         this.price = price;
@@ -106,6 +114,7 @@ public class Subscription {
     }
 
     public UUID getId() { return id; }
+    public User getUser() { return user; }
     public String getName() { return name; }
     public String getDescription() { return description; }
     public BigDecimal getPrice() { return price; }
@@ -118,4 +127,3 @@ public class Subscription {
     public Instant getCreatedAt() { return createdAt; }
     public Instant getUpdatedAt() { return updatedAt; }
 }
-

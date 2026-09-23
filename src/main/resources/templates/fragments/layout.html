@@ -11,6 +11,10 @@
             <a th:href="@{/}" th:classappend="${activePage == 'dashboard'} ? ' active'">Dashboard</a>
             <a th:href="@{/subscriptions}" th:classappend="${activePage == 'subscriptions'} ? ' active'">Subscriptions</a>
             <a class="button button-primary nav-add" th:href="@{/subscriptions/new}"><span aria-hidden="true">+</span> Add subscription</a>
+            <span class="account-name" th:text="${currentAccount != null ? currentAccount.displayName : ''}">Account</span>
+            <form class="logout-form" method="post" th:action="@{/logout}">
+                <button class="button button-secondary button-small" type="submit">Logout</button>
+            </form>
         </nav>
     </div>
 </header>

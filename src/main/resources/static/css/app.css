@@ -93,6 +93,7 @@ button, a { -webkit-tap-highlight-color: transparent; }
 .dashboard-footer-action p { margin: 4px 0 0; color: var(--muted); }
 .alert { padding: 13px 15px; display: flex; align-items: center; gap: 10px; border: 1px solid; border-radius: 11px; }
 .alert-success { color: #14532d; border-color: #bbdfc8; background: #effaf2; }
+.alert-error { color: var(--danger); border-color: #f4c7c3; background: var(--danger-soft); }
 .alert-icon { width: 24px; height: 24px; display: grid; place-items: center; border-radius: 50%; color: #fff; background: #23834d; font-weight: 800; }
 .table-summary { padding: 15px 20px; color: var(--muted); border-bottom: 1px solid var(--line); font-size: 13px; }
 .table-summary strong { color: var(--ink); }
@@ -141,6 +142,19 @@ button, a { -webkit-tap-highlight-color: transparent; }
 .field-error { margin-top: 5px; color: var(--danger); font-size: 12px; font-weight: 650; }
 .form-actions { padding-top: 7px; display: flex; justify-content: end; gap: 10px; }
 .site-footer { padding: 28px 0; color: var(--muted); border-top: 1px solid var(--line); background: #fff; font-size: 12px; }
+.account-name { max-width: 150px; overflow: hidden; color: var(--muted); font-size: 13px; font-weight: 650; text-overflow: ellipsis; white-space: nowrap; }
+.logout-form { margin: 0; }
+.auth-body { min-height: 100vh; display: grid; place-items: center; padding: 32px 16px; }
+.auth-shell { width: min(100%, 460px); }
+.auth-brand { width: fit-content; margin: 0 auto 24px; }
+.auth-card { padding: 32px; border: 1px solid var(--line); border-radius: var(--radius); background: var(--surface); box-shadow: var(--shadow); }
+.auth-card h1 { margin: 2px 0 6px; font-size: 32px; letter-spacing: -.03em; }
+.auth-intro { margin: 0 0 24px; color: var(--muted); }
+.auth-card .alert { margin-bottom: 18px; }
+.auth-form { display: grid; gap: 17px; }
+.auth-form .button { margin-top: 4px; }
+.auth-switch { margin: 22px 0 0; color: var(--muted); text-align: center; }
+.auth-switch a { color: var(--primary); font-weight: 700; }
 .error-page { min-height: calc(100vh - 73px); padding-block: 100px; text-align: center; }
 .error-page h1 { margin: 8px 0; font-size: 34px; }
 .error-page > p:not(.eyebrow) { margin: 0; color: var(--muted); }
@@ -164,6 +178,8 @@ button, a { -webkit-tap-highlight-color: transparent; }
     .brand > span:last-child { display: none; }
     .main-nav { flex: 1; justify-content: end; gap: 2px; }
     .main-nav > a:not(.button) { padding: 8px; font-size: 13px; }
+    .account-name { display: none; }
+    .logout-form .button { min-height: 38px; padding-inline: 9px; }
     .nav-add { width: 42px; min-height: 42px; padding: 0; font-size: 0; }
     .nav-add span { font-size: 20px; }
     .page-stack { padding-block: 36px 48px; gap: 20px; }
