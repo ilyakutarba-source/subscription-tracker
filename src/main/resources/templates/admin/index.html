@@ -82,7 +82,8 @@
                           th:text="${user.enabled} ? 'ENABLED' : 'BLOCKED'">ENABLED</span>
                 </div>
 
-                <form class="admin-role-form" method="post" th:action="@{/admin/users/{id}/role(id=${user.id})}">
+                <form class="admin-role-form" data-label="Role" method="post"
+                      th:action="@{/admin/users/{id}/role(id=${user.id})}">
                     <label class="sr-only" th:for="|role-${user.id}|">Role</label>
                     <select th:id="|role-${user.id}|" name="role" th:disabled="${user.currentAccount}"
                             aria-label="User role">
@@ -93,7 +94,7 @@
                             th:disabled="${user.currentAccount}">Save</button>
                 </form>
 
-                <div class="admin-actions">
+                <div class="admin-actions" data-label="Actions">
                     <span th:if="${user.currentAccount}" class="muted-text">Protected</span>
                     <form th:unless="${user.currentAccount}" method="post"
                           th:action="@{/admin/users/{id}/status(id=${user.id})}">
